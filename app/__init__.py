@@ -1,8 +1,11 @@
+import logging
+
 from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
 from marshmallow import ValidationError
 
+from app.middleware import log_request_response
 from config import Config
 
 db = SQLAlchemy()
@@ -20,12 +23,15 @@ def create_app():
 
     app.register_blueprint(user_bp, url_prefix='/api')
 
+    log_request_response(app)
+
     @app.errorhandler(ValidationError)
     def handle_validation_error(e):
         return jsonify({'errors': e.messages}), 422
 
     @app.errorhandler(Exception)
     def handle_exception(e):
+        logging.error(e)
         return jsonify({'message': 'Internal Server Error'}), 500
 
     return app

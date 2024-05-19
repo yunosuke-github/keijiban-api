@@ -23,7 +23,7 @@ class UserResource(Resource):
     def post(self):
         data = request.get_json()
         try:
-            user = user_schema.load(data)
+            user = User(**user_schema.load(data))
         except ValidationError as err:
             return {"errors": err.messages}, 422
 
