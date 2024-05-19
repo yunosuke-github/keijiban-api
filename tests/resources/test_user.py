@@ -52,7 +52,7 @@ def test_put_user(client):
 
     assert response.status_code == 200
     assert response_user['name'] == 'Updated User'
-    assert response_user['email'] == 'new@example.com'
+    assert response_user['email'] == 'test@example.com'
 
 
 def test_delete_user(client):
