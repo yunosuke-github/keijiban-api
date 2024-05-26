@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from flask import request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import ValidationError
 
@@ -11,19 +14,24 @@ users_schema = UserSchema(many=True)
 
 
 class UserResource(Resource):
-    def get(self, user_id=None):
-        if user_id:
-            user = User.query.get(user_id)
-            if user is None:
-                return {'message': 'User not found'}, 404
-            return user_schema.dump(user)
-        users = User.query.all()
-        return users_schema.dump(users)
+
+    @jwt_required()
+    def get(self, user_id):
+        i = get_jwt_identity()
+        if user_id != i:
+            return {'message': 'Permission denied'}, 403
+
+        user = User.query.get(user_id)
+        if user is None:
+            return {'message': 'User not found'}, 404
+        return user_schema.dump(user)
 
     def post(self):
         data = request.get_json()
         try:
             user = User(**user_schema.load(data))
+            user.created_at = datetime.now()
+            user.updated_at = datetime.now()
         except ValidationError as err:
             return {"errors": err.messages}, 422
 
@@ -31,7 +39,12 @@ class UserResource(Resource):
         db.session.commit()
         return user_schema.dump(user), 201
 
+    @jwt_required()
     def put(self, user_id):
+        i = get_jwt_identity()
+        if user_id != i:
+            return {'message': 'Permission denied'}, 403
+
         user = User.query.get(user_id)
         if not user:
             return {'message': 'User not found'}, 404
@@ -50,7 +63,12 @@ class UserResource(Resource):
         db.session.commit()
         return user_schema.dump(user)
 
+    @jwt_required()
     def delete(self, user_id):
+        i = get_jwt_identity()
+        if user_id != i:
+            return {'message': 'Permission denied'}, 403
+
         user = User.query.get(user_id)
         if not user:
             return {'message': 'User not found'}, 404

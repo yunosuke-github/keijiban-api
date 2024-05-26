@@ -24,5 +24,8 @@ def log_request_response(app):
 
     @app.after_request
     def log_response(response):
-        logging.info(f"Response: {response.status} Pyload: {json.loads(response.get_data(as_text=True))}")
+        if request.method in ['OPTIONS']:
+            logging.info(f"Response: {response.status}")
+        else:
+            logging.info(f"Response: {response.status} Pyload: {json.loads(response.get_data(as_text=True))}")
         return response
