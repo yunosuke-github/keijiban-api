@@ -144,3 +144,43 @@ def test_delete_comment(client):
 
     response = client.get(f'/api/comments/{comment.id}', headers={'Authorization': f'Bearer {access_token}'})
     assert response.status_code == 404
+
+def test_increment_like(client):
+    user = create_user('Test User', 'test@example.com', 'password')
+    db.session.add(user)
+    db.session.commit()
+
+    access_token = get_access_token(client, 'test@example.com', 'password')
+    thread = create_thread('Sample Thread', user.id, 'General', 'This is a sample thread description.')
+    db.session.add(thread)
+    db.session.commit()
+
+    comment = create_comment(thread.id, 'This is a sample comment.', user.id)
+    db.session.add(comment)
+    db.session.commit()
+
+    response = client.post(f'/api/comments/{comment.id}/like', headers={'Authorization': f'Bearer {access_token}'}, json={})
+    response_comment = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 200
+    assert response_comment['likes'] == 1
+
+def test_increment_dislike(client):
+    user = create_user('Test User', 'test@example.com', 'password')
+    db.session.add(user)
+    db.session.commit()
+
+    access_token = get_access_token(client, 'test@example.com', 'password')
+    thread = create_thread('Sample Thread', user.id, 'General', 'This is a sample thread description.')
+    db.session.add(thread)
+    db.session.commit()
+
+    comment = create_comment(thread.id, 'This is a sample comment.', user.id)
+    db.session.add(comment)
+    db.session.commit()
+
+    response = client.post(f'/api/comments/{comment.id}/dislike', headers={'Authorization': f'Bearer {access_token}'}, json={})
+    response_comment = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 200
+    assert response_comment['dislikes'] == 1
